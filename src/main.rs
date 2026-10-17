@@ -12,6 +12,8 @@ use ml_kem::{kem::Decapsulate, kem::Encapsulate, EncodedSizeUser, KemCore, MlKem
 use rand_core::OsRng;
 use x25519_dalek::{EphemeralSecret, PublicKey};
 
+mod boards;
+
 /// One measured step: name, how long it took, and how many bytes it moved over the wire (0 if none).
 struct Step {
     name: &'static str,
@@ -78,6 +80,10 @@ fn main() {
     println!("  combined wire:  {} bytes ({:.1}x classical-only)", classical_wire + pq_wire, (classical_wire + pq_wire) as f64 / classical_wire.max(1) as f64);
     println!("  static sizes:   X25519 key/shared-secret = {} bytes each (stack)", size_of::<[u8; 32]>());
     println!("\nFor flash/RAM on a real embedded target: build with --release, then run `size` or `cargo bloat --release` on the binary.");
+
+    // Hardcoded from actually running embedded_check under cargo-size + QEMU on a Cortex-M0
+    // target (see README) — this binary doesn't measure flash/stack itself.
+    boards::print_fit_table(26852, 51200, "measured via embedded_check on thumbv6m-none-eabi, see README");
 }
 
 #[cfg(test)]

@@ -46,6 +46,19 @@ cargo size --release --bin embedded_check --target thumbv6m-none-eabi --features
 
 That's the actual result `pq-fit` exists to produce: on a real, common, cheap Cortex-M0 board, **this hybrid handshake does not fit** — not because of flash (26 KB is nothing) but because of stack depth, 3x what the chip has. A device with more RAM, or a non-reference implementation with a smaller stack footprint, might fit fine; this one, on this board, doesn't. We still don't own physical hardware, so this is QEMU, not silicon — but QEMU did execute real ARMv6-M/ARMv7-M instructions, not x86_64 ones, so the crash and the correct checksum are both real signal, not a desktop guess.
 
+`cargo run --release` also prints this same result applied across a few common, cheap boards (public datasheet specs, not individually measured):
+
+| Board | Flash | RAM | Fits? |
+|---|---|---|---|
+| STM32F030F4 (Cortex-M0, ~$1) | 16 KB | 4 KB | ❌ |
+| BBC micro:bit / nRF51822 (Cortex-M0) | 256 KB | 16 KB | ❌ |
+| nRF52832 (Cortex-M4) | 512 KB | 64 KB | ✅ |
+| Raspberry Pi Pico / RP2040 (Cortex-M0+) | 2 MB | 264 KB | ✅ |
+| ESP32 (Xtensa LX6) | 4 MB | 320 KB | ✅ |
+| STM32L4R5 (Cortex-M4) | 2 MB | 640 KB | ✅ |
+
+Against our ~26.2 KB flash / ~51 KB stack: fine on anything with 64 KB+ of RAM, a real problem on the smallest, cheapest Cortex-M0 chips — which is exactly where this question matters most.
+
 ## ⚠️ Read this before you rely on anything here
 
 - **This is a feasibility/benchmark tool, not a security product.** It does not claim to protect any secret, and it should not be wired into a real protocol as-is.

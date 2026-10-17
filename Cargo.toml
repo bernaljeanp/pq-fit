@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Measure whether post-quantum key exchange (hybrid X25519 + ML-KEM-768) fits your device's time, memory and binary-size budget, before you commit to it."
 autobins = false  # embedded_check is opt-in (see [[bin]] below), so it never builds with the x86_64 desktop binary/tests
+default-run = "pq-fit"
 
 [[bin]]
 name = "pq-fit"
