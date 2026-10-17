@@ -1,0 +1,3 @@
+# Native Linux target for this benchmark tool; isolated from the kernel workspace config one level up (which targets UEFI).
+[build]
+target = "x86_64-unknown-linux-gnu"

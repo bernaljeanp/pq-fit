@@ -1,0 +1,15 @@
+[package]
+name = "pq-fit"
+version = "0.1.0"
+edition = "2021"
+description = "Measure whether post-quantum key exchange (hybrid X25519 + ML-KEM-768) fits your device's time, memory and binary-size budget, before you commit to it."
+
+[dependencies]
+ml-kem = "0.2"
+x25519-dalek = { version = "2", features = ["getrandom", "static_secrets"] }
+rand_core = "0.6"
+
+[profile.release]
+opt-level = "z"  # the question this tool answers is "does it fit", so optimize for size like an embedded build would
+lto = true
+panic = "abort"
