@@ -1,3 +1,7 @@
 # Native Linux target for this benchmark tool; isolated from the kernel workspace config one level up (which targets UEFI).
 [build]
 target = "x86_64-unknown-linux-gnu"
+
+# Only used when explicitly building embedded_check with --target thumbv6m-none-eabi.
+[target.thumbv6m-none-eabi]
+rustflags = ["-C", "link-arg=-Tlink.x"]

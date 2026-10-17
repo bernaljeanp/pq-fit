@@ -30,6 +30,22 @@ cargo test --release
 
 Run it **on the real target device**, not just your laptop, if you want numbers that mean anything for that device. The numbers above are a desktop stand-in and the tool says so every time it runs.
 
+## Embedded footprint (cross-compiled + QEMU, still no physical board)
+
+`src/bin/embedded_check.rs` is the same handshake, built `no_std` for a real Cortex-M0 target (`thumbv6m-none-eabi`), with a toy deterministic RNG standing in for hardware randomness:
+
+```bash
+rustup target add thumbv6m-none-eabi
+cargo size --release --bin embedded_check --target thumbv6m-none-eabi --features embedded -- -A
+```
+
+**Flash: ~26.2 KB** (`.vector_table` + `.text` + `.rodata`, `opt-level = "z"` + LTO). **Static RAM: 8 bytes** (`.bss`/`.data`) — but that number alone is misleading, because it doesn't count the stack, and the stack is where this actually breaks:
+
+- `memory.x` models the **BBC micro:bit** (a real Cortex-M0 board, nRF51822, 16 KB RAM), and QEMU's `microbit` machine emulates it. Booting `embedded_check` on it crashes with `HardFault`/`Lockup` — the call stack blows straight through all 16 KB of RAM.
+- Re-linked against a board with more RAM (QEMU's `lm3s6965evb`, a Cortex-M3 — thumbv6m binaries run on it fine, since M0's instruction set is a strict subset) and bisecting the RAM size: it **needs roughly 48–50 KB of stack** to complete without crashing. At 48 KB it hangs; at 50 KB it finishes and prints its checksum correctly.
+
+That's the actual result `pq-fit` exists to produce: on a real, common, cheap Cortex-M0 board, **this hybrid handshake does not fit** — not because of flash (26 KB is nothing) but because of stack depth, 3x what the chip has. A device with more RAM, or a non-reference implementation with a smaller stack footprint, might fit fine; this one, on this board, doesn't. We still don't own physical hardware, so this is QEMU, not silicon — but QEMU did execute real ARMv6-M/ARMv7-M instructions, not x86_64 ones, so the crash and the correct checksum are both real signal, not a desktop guess.
+
 ## ⚠️ Read this before you rely on anything here
 
 - **This is a feasibility/benchmark tool, not a security product.** It does not claim to protect any secret, and it should not be wired into a real protocol as-is.

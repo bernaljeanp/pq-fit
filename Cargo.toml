@@ -3,11 +3,37 @@ name = "pq-fit"
 version = "0.1.0"
 edition = "2021"
 description = "Measure whether post-quantum key exchange (hybrid X25519 + ML-KEM-768) fits your device's time, memory and binary-size budget, before you commit to it."
+autobins = false  # embedded_check is opt-in (see [[bin]] below), so it never builds with the x86_64 desktop binary/tests
+
+[[bin]]
+name = "pq-fit"
+path = "src/main.rs"
+
+[[bin]]
+name = "embedded_check"
+path = "src/bin/embedded_check.rs"
+required-features = ["embedded"]
+
+[features]
+embedded = []
 
 [dependencies]
-ml-kem = "0.2"
-x25519-dalek = { version = "2", features = ["getrandom", "static_secrets"] }
+ml-kem = { version = "0.2", default-features = false }
+x25519-dalek = { version = "2", default-features = false, features = ["static_secrets"] }
 rand_core = "0.6"
+
+# "getrandom" needs an OS; only pull it in for the desktop binary, never for embedded_check
+# (target_os = "none" on bare-metal), which supplies its own RNG instead.
+[target.'cfg(not(target_os = "none"))'.dependencies]
+x25519-dalek = { version = "2", features = ["getrandom"] }
+
+# Bare-metal Cortex-M0 build of embedded_check, to measure real flash/RAM footprint
+# without owning a board yet. Not used by the x86_64 desktop binary/tests.
+[target.thumbv6m-none-eabi.dependencies]
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+cortex-m-semihosting = "0.5"
+panic-halt = "1"
 
 [profile.release]
 opt-level = "z"  # the question this tool answers is "does it fit", so optimize for size like an embedded build would
