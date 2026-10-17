@@ -1,0 +1,50 @@
+name: Request a fit report
+description: Ask for a paid PQC + cert-readiness fit report for your specific device/fleet (async, no calls)
+title: "[Fit report] "
+labels: ["fit-report-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This replaces a discovery call. Fill in what you can and submit — you'll get a reply by email with scope and a fixed price (flat fee, delivered within 5 business days of starting), all async.
+
+        This issue is public, like any GitHub issue. If you'd rather not post device details publicly, email bernalmirandajean@gmail.com directly instead of using this form.
+  - type: input
+    id: chip
+    attributes:
+      label: Chip / architecture
+      description: e.g. ESP32, STM32F0 (Cortex-M0), Cortex-M4, nRF52, Raspberry Pi
+      placeholder: "STM32F0"
+    validations:
+      required: true
+  - type: input
+    id: memory
+    attributes:
+      label: Flash / RAM available
+      description: As much as you know
+      placeholder: "128K flash / 16K RAM"
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Current crypto / protocol in use
+      description: What the device does today for key exchange, TLS, certs, etc. (or "none yet")
+    validations:
+      required: false
+  - type: input
+    id: fleet
+    attributes:
+      label: Fleet size
+      description: Roughly how many of these devices are deployed or planned
+      placeholder: "~500 units"
+    validations:
+      required: false
+  - type: input
+    id: contact
+    attributes:
+      label: Contact email
+      description: Where to send scope + price
+      placeholder: "you@example.com"
+    validations:
+      required: true

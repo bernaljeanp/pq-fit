@@ -54,7 +54,7 @@ That's the actual result `pq-fit` exists to produce: on a real, common, cheap Co
 
 ## Got a real device to migrate?
 
-If you maintain a constrained or embedded Linux device and need to know whether it can afford post-quantum key exchange — or you want a written fit report for a specific device — [open an issue](https://github.com/bernaljeanp/pq-fit/issues/new) or email bernalmirandajean@gmail.com. Async only, no calls needed.
+If you maintain a constrained or embedded Linux device and need to know whether it can afford post-quantum key exchange — or you want a written fit report for a specific device — [request a fit report](https://github.com/bernaljeanp/pq-fit/issues/new?template=fit-report-request.yml) or email bernalmirandajean@gmail.com. Async only, no calls needed.
 
 ## License
 
