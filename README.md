@@ -36,6 +36,10 @@ Run it **on the real target device**, not just your laptop, if you want numbers 
 - **Neither underlying crypto crate has a confirmed independent audit.** `ml-kem` (RustCrypto) states in its own documentation that it "has never been independently audited" and says to use it at your own risk. No independent-audit claim was found for `x25519-dalek` either. `pq-fit` prints this warning every time it runs — it is not buried in this README.
 - **Desktop numbers are not embedded numbers.** A real microcontroller (Cortex-M0, ESP32, etc.) will be slower and far tighter on RAM than the machine you ran this on. Use `size`/`cargo bloat --release` and a real board for ground truth before deciding anything.
 
+## Got a real device to migrate?
+
+If you maintain a constrained or embedded Linux device and need to know whether it can afford post-quantum key exchange — or you want a written fit report for a specific device — [open an issue](https://github.com/bernaljeanp/pq-fit/issues/new) or email bernalmirandajean@gmail.com. Async only, no calls needed.
+
 ## License
 
 MIT.
