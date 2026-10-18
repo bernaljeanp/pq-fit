@@ -6,7 +6,7 @@ Every lock protecting data today — passwords, bank transfers, messages — is 
 
 `pq-fit` answers one question before you commit to a migration: **does the new lock fit on this device?**
 
-It runs a real hybrid post-quantum key exchange — classical **X25519** combined with **ML-KEM-768** (FIPS 203), the way a real migration would run them side by side — and reports, on your actual machine:
+It runs a real hybrid post-quantum key exchange — classical **X25519** combined with **ML-KEM-768** (FIPS 203), the way a real migration would run them side by side — plus **ML-DSA-65** (FIPS 204) signing, since a real migration needs to sign things too, not just agree on a key. It reports, on your actual machine:
 
 - time per step (keygen, handshake, encapsulate/decapsulate) and total
 - bytes moved over the wire per step and total

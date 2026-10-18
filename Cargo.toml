@@ -20,6 +20,7 @@ embedded = []
 
 [dependencies]
 ml-kem = { version = "0.2", default-features = false }
+ml-dsa = { version = "0.1", default-features = false, features = ["rand_core"] }
 x25519-dalek = { version = "2", default-features = false, features = ["static_secrets"] }
 rand_core = "0.6"
 
@@ -27,6 +28,7 @@ rand_core = "0.6"
 # (target_os = "none" on bare-metal), which supplies its own RNG instead.
 [target.'cfg(not(target_os = "none"))'.dependencies]
 x25519-dalek = { version = "2", features = ["getrandom"] }
+ml-dsa = { version = "0.1", features = ["getrandom"] }
 
 # Bare-metal Cortex-M0 build of embedded_check, to measure real flash/RAM footprint
 # without owning a board yet. Not used by the x86_64 desktop binary/tests.

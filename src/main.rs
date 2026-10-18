@@ -8,6 +8,7 @@
 //! slower and tighter on RAM; `size` command, `cargo bloat`, and a real board are still the only ground truth.
 use std::{mem::size_of, time::Instant};
 
+use ml_dsa::{Generate, Keypair, MlDsa65, SignatureEncoding, Signer, SigningKey, Verifier};
 use ml_kem::{kem::Decapsulate, kem::Encapsulate, EncodedSizeUser, KemCore, MlKem768};
 use rand_core::OsRng;
 use x25519_dalek::{EphemeralSecret, PublicKey};
@@ -54,6 +55,24 @@ fn mlkem_handshake() -> Vec<Step> {
     ]
 }
 
+/// ML-DSA-65 sign/verify alone (the post-quantum signature half, for the signing side of
+/// a hybrid handshake — unaudited reference implementation, same as ML-KEM above).
+fn mldsa_signing() -> Vec<Step> {
+    let (sk, step_keygen) = timed("ML-DSA-65 keygen", 0, || SigningKey::<MlDsa65>::generate());
+    let vk = sk.verifying_key();
+    let vk_wire = vk.encode().len();
+    let msg = b"pq-fit handshake transcript";
+    let (sig, step_sign) = timed("ML-DSA-65 sign", 0, || sk.sign(msg));
+    let sig_wire = SignatureEncoding::to_bytes(&sig).len();
+    let (verified, step_verify) = timed("ML-DSA-65 verify", 0, || vk.verify(msg, &sig).is_ok());
+    assert!(verified, "ML-DSA signature did not verify");
+    vec![
+        Step { wire_bytes: vk_wire, ..step_keygen },
+        Step { wire_bytes: sig_wire, ..step_sign },
+        step_verify,
+    ]
+}
+
 fn report(title: &str, steps: &[Step]) -> (u128, usize) {
     println!("\n== {title}");
     let mut total_us = 0u128;
@@ -74,10 +93,12 @@ fn main() {
 
     let (classical_us, classical_wire) = report("Classical only: X25519", &classical_handshake());
     let (pq_us, pq_wire) = report("Post-quantum only: ML-KEM-768", &mlkem_handshake());
+    let (sig_us, sig_wire) = report("Post-quantum signing: ML-DSA-65", &mldsa_signing());
 
     println!("\n== Hybrid (both, as a real migration would run them side by side)");
     println!("  combined time:  {} us ({:.1}x classical-only)", classical_us + pq_us, (classical_us + pq_us) as f64 / classical_us.max(1) as f64);
     println!("  combined wire:  {} bytes ({:.1}x classical-only)", classical_wire + pq_wire, (classical_wire + pq_wire) as f64 / classical_wire.max(1) as f64);
+    println!("  + signing:      {} us, {} bytes (ML-DSA-65 keygen+sign+verify, not counted above)", sig_us, sig_wire);
     println!("  static sizes:   X25519 key/shared-secret = {} bytes each (stack)", size_of::<[u8; 32]>());
     println!("\nFor flash/RAM on a real embedded target: build with --release, then run `size` or `cargo bloat --release` on the binary.");
 
@@ -107,6 +128,16 @@ mod tests {
         let ct = steps.iter().find(|s| s.name.contains("encapsulate")).unwrap();
         assert_eq!(ek.wire_bytes, 1184, "ML-KEM-768 encapsulation key must be 1184 bytes per FIPS 203");
         assert_eq!(ct.wire_bytes, 1088, "ML-KEM-768 ciphertext must be 1088 bytes per FIPS 203");
+    }
+
+    #[test]
+    fn mldsa_signing_verifies_and_reports_the_standard_ml_dsa_65_sizes() {
+        // FIPS 204 ML-DSA-65 fixed sizes: verifying key 1952 B, signature 3309 B.
+        let steps = mldsa_signing();
+        let vk = steps.iter().find(|s| s.name.contains("keygen")).unwrap();
+        let sig = steps.iter().find(|s| s.name.contains("sign") && !s.name.contains("verify")).unwrap();
+        assert_eq!(vk.wire_bytes, 1952, "ML-DSA-65 verifying key must be 1952 bytes per FIPS 204");
+        assert_eq!(sig.wire_bytes, 3309, "ML-DSA-65 signature must be 3309 bytes per FIPS 204");
     }
 
     #[test]
