@@ -59,6 +59,22 @@ That's the actual result `pq-fit` exists to produce: on a real, common, cheap Co
 
 Against our ~26.2 KB flash / ~51 KB stack: fine on anything with 64 KB+ of RAM, a real problem on the smallest, cheapest Cortex-M0 chips — which is exactly where this question matters most.
 
+## The "pqm0" track: real cycle counts on an M0-class core
+
+[pqm4](https://github.com/mupq/pqm4) is the standard cycle-count benchmark for PQC on Cortex-M4. Nothing equivalent exists yet for **Cortex-M0/M0+** — the smallest, cheapest chip class, and the one where "does it fit" matters most. `embedded_check` is a first attempt at that, using **SysTick** (the one cycle-accurate timer ARMv6-M always has — M0 has no DWT cycle counter, unlike M4) instead of wall-clock time:
+
+```
+pqm0 (QEMU, not silicon) — cycles per operation:
+x25519_keygen_a,3433
+x25519_keygen_b,450
+x25519_diffie_hellman,117566
+mlkem768_keygen,85805
+mlkem768_encapsulate,49431
+mlkem768_decapsulate,57238
+```
+
+Measured on QEMU's `lm3s6965evb` (Cortex-M3, since the real micro:bit's 16 KB RAM crashes before any cycle count can print — see above). Two honest caveats: QEMU's instruction timing approximates real silicon, it isn't cycle-accurate the way actual hardware is; and `diffie_hellman` costs ~35x more than the second `x25519_keygen` because `x25519-dalek`'s `precomputed-tables` feature is disabled here (it needs `alloc`, which doesn't fit this no-heap build) — a real M0 port would want to resolve that trade-off, not just inherit it. This is v0.1 of one scheme on one implementation; a real "pqm0" needs more schemes, more implementations, and eventually a real board. PRs and issues welcome.
+
 ## ⚠️ Read this before you rely on anything here
 
 - **This is a feasibility/benchmark tool, not a security product.** It does not claim to protect any secret, and it should not be wired into a real protocol as-is.
